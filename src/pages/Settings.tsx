@@ -4,6 +4,7 @@ import { useAuthContext } from '@/feature/authentication/model/AuthContext';
 import { useUserSettings } from '@/feature/settings/controller/useUserSettings';
 import { useStorageInfo } from '@/feature/settings/controller/useStorageInfo';
 import { useAccountActions } from '@/feature/settings/controller/useAccountActions';
+import { useTheme } from '@/components/theme-provider';
 import { clearCachedMemories } from '@/feature/refetch/model/cacheDb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ArrowLeft, Trash2, LogOut, Key, Database } from 'lucide-react';
+import { ArrowLeft, Trash2, LogOut, Key, Moon, Sun, Monitor } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 /**
@@ -20,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 export default function Settings() {
   const navigate = useNavigate();
   const { user, logout } = useAuthContext();
+  const { theme, setTheme } = useTheme();
   const { settings, loading: settingsLoading, saveSettings } = useUserSettings(user?.uid);
   const { storageInfo, cacheInfo, loading: storageLoading, refetch: refetchStorage } = useStorageInfo(user?.uid);
   const { loading: actionLoading, sendPasswordReset, deleteAccount } = useAccountActions();
@@ -93,6 +95,52 @@ export default function Settings() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
+        {/* Appearance Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Appearance</CardTitle>
+            <CardDescription>
+              Customize the visual theme of the application
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Theme</label>
+              <Select 
+                value={theme}
+                onValueChange={(value: any) => setTheme(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">
+                    <div className="flex items-center gap-2">
+                      <Sun className="h-4 w-4" />
+                      <span>Light</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="dark">
+                    <div className="flex items-center gap-2">
+                      <Moon className="h-4 w-4" />
+                      <span>Dark</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="system">
+                    <div className="flex items-center gap-2">
+                      <Monitor className="h-4 w-4" />
+                      <span>System</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Select your preferred theme or use system settings
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Refetch Settings */}
         <Card>
           <CardHeader>
