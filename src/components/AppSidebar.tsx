@@ -1,10 +1,32 @@
 import { Home, Upload, Library, FolderOpen, Settings, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@/feature/authentication/model/AuthContext';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar } from '@/components/ui/sidebar';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarFooter,
+  useSidebar,
+} from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { logout } from '@/feature/authentication/controller/useAuth';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const menuItems = [
   { title: 'Dashboard', url: '/dashboard', icon: Home },
@@ -82,15 +104,31 @@ export function AppSidebar() {
               {!isCollapsed && (
                 <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
               )}
-              <Button 
-                variant="ghost" 
-                size={isCollapsed ? "icon" : "sm"}
-                onClick={handleLogout}
-                className="flex-shrink-0"
-              >
-                <LogOut className="h-4 w-4" />
-                {!isCollapsed && <span className="ml-2">Logout</span>}
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size={isCollapsed ? 'icon' : 'sm'}
+                    className="flex-shrink-0"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {!isCollapsed && <span className="ml-2">Logout</span>}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You will need to sign in again to access your memories. Any in-progress actions
+                      may be lost.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Stay logged in</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout}>Log out</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </SidebarMenuItem>
         </SidebarMenu>

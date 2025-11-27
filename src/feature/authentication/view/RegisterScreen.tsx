@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { signup, loginWithGoogle } from '../controller/useAuth';
 import { toast } from 'sonner';
 import { useAuthContext } from '../model/AuthContext';
-import { useEffect } from 'react';
 
 /**
  * Register screen component
@@ -17,6 +16,7 @@ export const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuthContext();
 
@@ -26,32 +26,33 @@ export const RegisterScreen = () => {
     }
   }, [user, navigate]);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      setErrorMessage('Password must be at least 6 characters');
       return;
     }
 
     setLoading(true);
-    
+    setErrorMessage(null);
+
     try {
       await signup(email, password);
       toast.success('Account created successfully!');
       navigate('/');
     } catch (error: any) {
-      toast.error(error.message);
+      const message = error?.message || 'Failed to create account';
+      setErrorMessage(message);
     } finally {
       setLoading(false);
     }
   };
-
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
@@ -68,7 +69,16 @@ export const RegisterScreen = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
       <Card className="w-full max-w-md shadow-soft">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-1 relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            className="absolute left-0 top-0 mt-1 ml-1 text-muted-foreground"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </Button>
           <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
           <CardDescription className="text-center">
             Start preserving your memories today
@@ -83,7 +93,10 @@ export const RegisterScreen = () => {
                 type="email"
                 placeholder="your@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrorMessage(null);
+                }}
                 required
               />
             </div>
@@ -94,7 +107,10 @@ export const RegisterScreen = () => {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrorMessage(null);
+                }}
                 required
               />
             </div>
@@ -105,10 +121,18 @@ export const RegisterScreen = () => {
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setErrorMessage(null);
+                }}
                 required
               />
             </div>
+            {errorMessage && (
+              <p className="text-sm text-destructive" role="alert">
+                {errorMessage}
+              </p>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-3">
             <Button type="submit" className="w-full" disabled={loading}>
