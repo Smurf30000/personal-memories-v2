@@ -162,6 +162,32 @@ export default function UploadMedia() {
             </CardContent>
           </Card>
         )}
+
+        {uploads.some(u => u.status === 'completed') && (
+          <Card className="mt-6 border-green-600/50 bg-green-50 dark:bg-green-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                  <div>
+                    <h3 className="font-semibold text-green-900 dark:text-green-100">
+                      Upload Complete!
+                    </h3>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      {uploads.filter(u => u.status === 'completed').length} file(s) uploaded successfully
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigate('/library')}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  View Library
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );

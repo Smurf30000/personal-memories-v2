@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, limit, getDocs, deleteDoc, doc, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '@/feature/authentication/model/firebaseConfig';
+import { db } from '@/feature/authentication/model/firebaseConfig';
 import { MediaMetadata } from '../model/mediaTypes';
 import { toast } from '@/hooks/use-toast';
 
@@ -67,6 +66,7 @@ export const useMediaLibrary = (userId: string | undefined) => {
           fileSize: data.fileSize,
           uploadedAt: data.uploadedAt?.toDate() || new Date(),
           downloadUrl: data.downloadUrl,
+          base64Data: data.base64Data,
           userId: data.userId,
         });
       });
@@ -99,15 +99,7 @@ export const useMediaLibrary = (userId: string | undefined) => {
    */
   const deleteMedia = async (mediaItem: MediaMetadata) => {
     try {
-      // Extract file path from download URL
-      const urlParts = mediaItem.downloadUrl.split('/o/')[1];
-      const filePath = decodeURIComponent(urlParts.split('?')[0]);
-      
-      // Delete from Storage
-      const storageRef = ref(storage, filePath);
-      await deleteObject(storageRef);
-
-      // Delete from Firestore
+      // Delete from Firestore only (base64 data stored in document)
       await deleteDoc(doc(db, 'media', mediaItem.id));
 
       // Update local state
