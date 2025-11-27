@@ -6,6 +6,9 @@ import { logout } from "@/feature/authentication/controller/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { useMediaCounts } from "@/feature/media/controller/useMediaCounts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMemoryRefetch } from "@/feature/refetch/controller/useMemoryRefetch";
+import { MemoriesWidget } from "@/feature/refetch/view/MemoriesWidget";
+import { useMediaLibrary } from "@/feature/media/controller/useMediaLibrary";
 
 /**
  * Protected dashboard for authenticated users
@@ -14,6 +17,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const { counts, loading } = useMediaCounts(user?.uid);
+  const { memories, loading: memoriesLoading, isOnline, refetch } = useMemoryRefetch(user?.uid);
+  const { deleteMedia } = useMediaLibrary(user?.uid);
 
   const handleLogout = async () => {
     try {
@@ -55,6 +60,17 @@ const Dashboard = () => {
           <p className="text-muted-foreground mb-12">
             Manage your memories, create albums, and access your media library.
           </p>
+
+          {/* Today's Memories Widget */}
+          <div className="mb-12">
+            <MemoriesWidget 
+              memories={memories}
+              loading={memoriesLoading}
+              isOnline={isOnline}
+              onRefresh={refetch}
+              onDelete={deleteMedia}
+            />
+          </div>
 
           {/* Quick Actions */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
