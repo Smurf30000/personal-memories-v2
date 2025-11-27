@@ -39,10 +39,17 @@ export const useMediaCounts = (userId: string | undefined) => {
           }
         });
         
+        // Fetch albums count
+        const albumsQuery = query(
+          collection(db, 'albums'),
+          where('userId', '==', userId)
+        );
+        const albumsSnapshot = await getDocs(albumsQuery);
+        
         setCounts({
           photos: photoCount,
           videos: videoCount,
-          albums: 0, // Will be implemented in Phase 3.5
+          albums: albumsSnapshot.size,
         });
       } catch (error) {
         console.error('Error fetching media counts:', error);

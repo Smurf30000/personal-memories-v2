@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMemoryRefetch } from "@/feature/refetch/controller/useMemoryRefetch";
 import { MemoriesWidget } from "@/feature/refetch/view/MemoriesWidget";
 import { useMediaLibrary } from "@/feature/media/controller/useMediaLibrary";
+import { useAlbums } from "@/feature/albums/controller/useAlbums";
 
 /**
  * Protected dashboard for authenticated users
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const { counts, loading } = useMediaCounts(user?.uid);
   const { memories, loading: memoriesLoading, isOnline, refetch } = useMemoryRefetch(user?.uid);
   const { deleteMedia } = useMediaLibrary(user?.uid);
+  const { albums } = useAlbums(user?.uid);
 
   const handleLogout = async () => {
     try {
@@ -105,14 +107,17 @@ const Dashboard = () => {
               </Button>
             </div>
 
-            <div className="bg-card p-6 rounded-lg border hover:border-primary transition-colors cursor-pointer">
+            <div 
+              className="bg-card p-6 rounded-lg border hover:border-primary transition-colors cursor-pointer"
+              onClick={() => navigate('/albums')}
+            >
               <FolderOpen className="h-10 w-10 text-primary mb-4" />
               <h3 className="text-xl font-semibold mb-2">Manage Albums</h3>
               <p className="text-sm text-muted-foreground">
                 Organize your memories into albums
               </p>
-              <Button className="mt-4 w-full" disabled>
-                Coming Soon
+              <Button className="mt-4 w-full">
+                View Albums
               </Button>
             </div>
           </div>
@@ -137,7 +142,7 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">Videos</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-primary">{counts.albums}</p>
+                  <p className="text-3xl font-bold text-primary">{albums.length}</p>
                   <p className="text-sm text-muted-foreground">Albums</p>
                 </div>
               </div>

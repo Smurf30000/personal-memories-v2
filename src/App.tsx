@@ -7,6 +7,8 @@ import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import UploadMedia from "./pages/UploadMedia";
 import MediaLibrary from "./pages/MediaLibrary";
+import Albums from "./pages/Albums";
+import AlbumDetail from "./pages/AlbumDetail";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./feature/authentication/model/AuthContext";
@@ -38,6 +40,16 @@ const App = () => (
             <Route path="/library" element={
               <ProtectedRoute>
                 <MediaLibrary />
+              </ProtectedRoute>
+            } />
+            <Route path="/albums" element={
+              <ProtectedRoute>
+                <Albums />
+              </ProtectedRoute>
+            } />
+            <Route path="/albums/:albumId" element={
+              <ProtectedRoute>
+                <AlbumDetail />
               </ProtectedRoute>
             } />
             <Route path="/settings" element={

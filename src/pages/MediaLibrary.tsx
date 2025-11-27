@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/feature/authentication/model/AuthContext';
 import { useMediaLibrary } from '@/feature/media/controller/useMediaLibrary';
+import { useAlbums } from '@/feature/albums/controller/useAlbums';
 import { MediaGrid } from '@/feature/media/view/MediaGrid';
 import { MediaPreviewModal } from '@/feature/media/view/MediaPreviewModal';
+import { AddToAlbumDialog } from '@/feature/albums/view/AddToAlbumDialog';
 import { MediaMetadata } from '@/feature/media/model/mediaTypes';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Image, Video } from 'lucide-react';
+import { ArrowLeft, Image, Video, FolderPlus } from 'lucide-react';
 
 /**
  * Media library page component
@@ -17,13 +19,25 @@ export default function MediaLibrary() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const { media, loading, loadingMore, hasMore, filter, sort, setFilter, setSort, deleteMedia, loadMore } = useMediaLibrary(user?.uid);
+  const { albums, addMediaToAlbum } = useAlbums(user?.uid);
   const [selectedMedia, setSelectedMedia] = useState<MediaMetadata | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showAddToAlbum, setShowAddToAlbum] = useState(false);
 
   /**
-   * Handles media preview
+   * Handles media click
    */
   const handleMediaClick = (mediaItem: MediaMetadata) => {
     setSelectedMedia(mediaItem);
+    setShowPreview(true);
+  };
+
+  /**
+   * Handles add to album button
+   */
+  const handleAddToAlbum = (mediaItem: MediaMetadata) => {
+    setSelectedMedia(mediaItem);
+    setShowAddToAlbum(true);
   };
 
   /**
@@ -58,7 +72,7 @@ export default function MediaLibrary() {
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-popover">
                 <SelectItem value="all">All Media</SelectItem>
                 <SelectItem value="images">
                   <div className="flex items-center gap-2">
@@ -82,7 +96,7 @@ export default function MediaLibrary() {
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-popover">
                 <SelectItem value="newest">Newest First</SelectItem>
                 <SelectItem value="oldest">Oldest First</SelectItem>
               </SelectContent>
@@ -144,12 +158,40 @@ export default function MediaLibrary() {
         )}
       </main>
 
-      {/* Preview Modal */}
-      <MediaPreviewModal 
-        media={selectedMedia}
-        open={!!selectedMedia}
-        onClose={() => setSelectedMedia(null)}
-        onDelete={handleDelete}
+      {/* Preview Modal with Add to Album */}
+      {selectedMedia && showPreview && (
+        <MediaPreviewModal 
+          media={selectedMedia}
+          open={showPreview}
+          onClose={() => {
+            setShowPreview(false);
+            setSelectedMedia(null);
+          }}
+          onDelete={handleDelete}
+        >
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setShowPreview(false);
+              setShowAddToAlbum(true);
+            }}
+          >
+            <FolderPlus className="mr-2 h-4 w-4" />
+            Add to Album
+          </Button>
+        </MediaPreviewModal>
+      )}
+
+      {/* Add to Album Dialog */}
+      <AddToAlbumDialog
+        open={showAddToAlbum}
+        onClose={() => {
+          setShowAddToAlbum(false);
+          setSelectedMedia(null);
+        }}
+        albums={albums}
+        mediaId={selectedMedia?.id || ''}
+        onAddToAlbum={addMediaToAlbum}
       />
     </div>
   );

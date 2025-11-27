@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { MediaMetadata } from '../model/mediaTypes';
 import { Download, Trash2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { format } from 'date-fns';
 
 interface MediaPreviewModalProps {
@@ -11,12 +11,13 @@ interface MediaPreviewModalProps {
   open: boolean;
   onClose: () => void;
   onDelete: (media: MediaMetadata) => Promise<void>;
+  children?: ReactNode;
 }
 
 /**
  * Modal for previewing media with delete and download options
  */
-export function MediaPreviewModal({ media, open, onClose, onDelete }: MediaPreviewModalProps) {
+export function MediaPreviewModal({ media, open, onClose, onDelete, children }: MediaPreviewModalProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -96,6 +97,7 @@ export function MediaPreviewModal({ media, open, onClose, onDelete }: MediaPrevi
           </div>
 
           <DialogFooter className="gap-2">
+            {children}
             <Button variant="outline" onClick={handleDownload}>
               <Download className="mr-2 h-4 w-4" />
               Download
