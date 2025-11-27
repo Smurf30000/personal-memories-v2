@@ -7,6 +7,7 @@ import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import UploadMedia from "./pages/UploadMedia";
 import MediaLibrary from "./pages/MediaLibrary";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./feature/authentication/model/AuthContext";
 import { LoginScreen } from "./feature/authentication/view/LoginScreen";
@@ -37,6 +38,11 @@ const App = () => (
             <Route path="/library" element={
               <ProtectedRoute>
                 <MediaLibrary />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             } />
             <Route path="/login" element={<LoginScreen />} />

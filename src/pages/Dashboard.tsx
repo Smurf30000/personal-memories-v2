@@ -43,6 +43,9 @@ const Dashboard = () => {
       <header className="container mx-auto px-4 py-6 flex justify-between items-center border-b">
         <h1 className="text-2xl font-bold text-primary">Personal Memories</h1>
         <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate('/settings')}>
+            Settings
+          </Button>
           <span className="text-sm text-muted-foreground">
             {user?.email}
           </span>

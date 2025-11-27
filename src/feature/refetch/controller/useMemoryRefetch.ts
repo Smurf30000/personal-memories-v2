@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/feature/authentication/model/firebaseConfig';
 import { MediaMetadata } from '@/feature/media/model/mediaTypes';
 import { CachedMemory } from '../model/refetchTypes';
 import { saveCachedMemories, getCachedMemories, clearCachedMemories } from '../model/cacheDb';
-import { useRefetchSettings } from './useRefetchSettings';
 import { toast } from '@/hooks/use-toast';
 
 /**
@@ -14,7 +13,71 @@ export const useMemoryRefetch = (userId: string | undefined) => {
   const [memories, setMemories] = useState<MediaMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { settings, updateLastRefetchTime, shouldRefetch } = useRefetchSettings();
+  const [settings, setSettings] = useState({ frequency: 'daily', lastRefetchTime: null, memoryCount: 8 });
+
+  /**
+   * Fetches settings from Firestore
+   */
+  const fetchSettings = async () => {
+    if (!userId) return;
+    
+    try {
+      const settingsRef = doc(db, 'users', userId, 'settings', 'preferences');
+      const settingsDoc = await getDoc(settingsRef);
+      
+      if (settingsDoc.exists()) {
+        const data = settingsDoc.data();
+        setSettings({
+          frequency: data.refetchFrequency || 'daily',
+          lastRefetchTime: data.lastRefetchTime || null,
+          memoryCount: data.memoryCount || 8,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+  }, [userId]);
+
+  /**
+   * Checks if it's time to refetch based on frequency
+   */
+  const shouldRefetch = (): boolean => {
+    if (!settings.lastRefetchTime) return true;
+
+    const now = Date.now();
+    const timeDiff = now - settings.lastRefetchTime;
+    const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+    switch (settings.frequency) {
+      case 'daily':
+        return hoursDiff >= 24;
+      case 'weekly':
+        return hoursDiff >= 24 * 7;
+      case 'monthly':
+        return hoursDiff >= 24 * 30;
+      default:
+        return true;
+    }
+  };
+
+  /**
+   * Updates last refetch time in Firestore
+   */
+  const updateLastRefetchTime = async () => {
+    if (!userId) return;
+    
+    try {
+      const settingsRef = doc(db, 'users', userId, 'settings', 'preferences');
+      await setDoc(settingsRef, { lastRefetchTime: Date.now() }, { merge: true });
+      setSettings(prev => ({ ...prev, lastRefetchTime: Date.now() }));
+    } catch (error) {
+      console.error('Error updating refetch time:', error);
+    }
+  };
 
   /**
    * Monitors online/offline status
