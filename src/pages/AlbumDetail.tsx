@@ -59,6 +59,7 @@ export default function AlbumDetail() {
               fileSize: data.fileSize,
               uploadedAt: data.uploadedAt?.toDate() || new Date(),
               downloadUrl: data.downloadUrl,
+              base64Data: data.base64Data,
               userId: data.userId,
             });
           });
@@ -69,8 +70,9 @@ export default function AlbumDetail() {
         // Set cover image if not already set
         if (!album.coverImageUrl && batches.length > 0) {
           const firstImage = batches.find(m => m.fileType.startsWith('image/'));
-          if (firstImage) {
-            await updateAlbum(album.id, { coverImageUrl: firstImage.downloadUrl });
+          if (firstImage && firstImage.base64Data) {
+            const coverUrl = `data:${firstImage.fileType};base64,${firstImage.base64Data}`;
+            await updateAlbum(album.id, { coverImageUrl: coverUrl });
           }
         }
       } catch (error) {

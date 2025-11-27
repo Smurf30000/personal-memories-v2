@@ -105,8 +105,19 @@ export const useAlbums = (userId: string | undefined) => {
     try {
       const albumRef = doc(db, 'albums', albumId);
       
+      // Filter out undefined values (Firestore rejects them)
+      const filteredUpdates: Record<string, any> = {};
+      for (const [key, value] of Object.entries(updates)) {
+        if (value !== undefined) {
+          filteredUpdates[key] = value;
+        }
+      }
+      
+      // Only update if we have valid fields
+      if (Object.keys(filteredUpdates).length === 0) return;
+      
       const updateData = {
-        ...updates,
+        ...filteredUpdates,
         updatedAt: serverTimestamp(),
       };
 

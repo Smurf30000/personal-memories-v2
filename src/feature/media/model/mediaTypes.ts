@@ -16,6 +16,7 @@ export interface MediaMetadata {
  * File upload progress information
  */
 export interface UploadProgress {
+  id: string;
   file: File;
   progress: number;
   status: 'uploading' | 'completed' | 'error';

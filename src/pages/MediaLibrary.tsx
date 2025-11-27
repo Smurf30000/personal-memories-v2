@@ -10,7 +10,8 @@ import { MediaMetadata } from '@/feature/media/model/mediaTypes';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Image, Video, FolderPlus } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { ArrowLeft, Image, Video, FolderPlus, CheckSquare, Square, Trash2 } from 'lucide-react';
 
 /**
  * Media library page component
@@ -23,13 +24,64 @@ export default function MediaLibrary() {
   const [selectedMedia, setSelectedMedia] = useState<MediaMetadata | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showAddToAlbum, setShowAddToAlbum] = useState(false);
+  
+  // Multi-select state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   /**
    * Handles media click
    */
   const handleMediaClick = (mediaItem: MediaMetadata) => {
-    setSelectedMedia(mediaItem);
-    setShowPreview(true);
+    if (selectionMode) {
+      toggleSelection(mediaItem.id);
+    } else {
+      setSelectedMedia(mediaItem);
+      setShowPreview(true);
+    }
+  };
+
+  /**
+   * Toggles selection of a media item
+   */
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  /**
+   * Selects all media
+   */
+  const selectAll = () => {
+    setSelectedIds(new Set(media.map(m => m.id)));
+  };
+
+  /**
+   * Deselects all media
+   */
+  const deselectAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  /**
+   * Handles batch deletion
+   */
+  const handleBatchDelete = async () => {
+    const itemsToDelete = media.filter(m => selectedIds.has(m.id));
+    for (const item of itemsToDelete) {
+      await deleteMedia(item);
+    }
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+    setShowDeleteConfirm(false);
   };
 
   /**
@@ -64,50 +116,101 @@ export default function MediaLibrary() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Filters and Sort */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Filter:</span>
-            <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-50 bg-popover">
-                <SelectItem value="all">All Media</SelectItem>
-                <SelectItem value="images">
-                  <div className="flex items-center gap-2">
-                    <Image className="h-4 w-4" />
-                    Images Only
-                  </div>
-                </SelectItem>
-                <SelectItem value="videos">
-                  <div className="flex items-center gap-2">
-                    <Video className="h-4 w-4" />
-                    Videos Only
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Filters, Sort, and Selection Controls */}
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Filter:</span>
+              <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-popover">
+                  <SelectItem value="all">All Media</SelectItem>
+                  <SelectItem value="images">
+                    <div className="flex items-center gap-2">
+                      <Image className="h-4 w-4" />
+                      Images Only
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="videos">
+                    <div className="flex items-center gap-2">
+                      <Video className="h-4 w-4" />
+                      Videos Only
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Sort:</span>
+              <Select value={sort} onValueChange={(value: any) => setSort(value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-popover">
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex-1" />
+
+            <div className="text-sm text-muted-foreground self-center">
+              {media.length} {media.length === 1 ? 'item' : 'items'}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Sort:</span>
-            <Select value={sort} onValueChange={(value: any) => setSort(value)}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-50 bg-popover">
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex-1" />
-
-          <div className="text-sm text-muted-foreground self-center">
-            {media.length} {media.length === 1 ? 'item' : 'items'}
-          </div>
+          {/* Selection Mode Controls */}
+          {selectionMode ? (
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+              <Button variant="outline" size="sm" onClick={() => {
+                setSelectionMode(false);
+                setSelectedIds(new Set());
+              }}>
+                Cancel
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={selectedIds.size === media.length ? deselectAll : selectAll}
+              >
+                {selectedIds.size === media.length ? (
+                  <>
+                    <Square className="h-4 w-4 mr-2" />
+                    Deselect All
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="h-4 w-4 mr-2" />
+                    Select All
+                  </>
+                )}
+              </Button>
+              <div className="flex-1" />
+              <span className="text-sm font-medium">
+                {selectedIds.size} selected
+              </span>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                disabled={selectedIds.size === 0}
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Selected
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <Button variant="outline" size="sm" onClick={() => setSelectionMode(true)}>
+                <CheckSquare className="h-4 w-4 mr-2" />
+                Select
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Loading State */}
@@ -140,7 +243,12 @@ export default function MediaLibrary() {
         {/* Media Grid */}
         {!loading && media.length > 0 && (
           <>
-            <MediaGrid media={media} onMediaClick={handleMediaClick} />
+            <MediaGrid 
+              media={media} 
+              onMediaClick={handleMediaClick}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+            />
 
             {/* Load More Button */}
             {hasMore && (
@@ -193,6 +301,24 @@ export default function MediaLibrary() {
         mediaId={selectedMedia?.id || ''}
         onAddToAlbum={addMediaToAlbum}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} {selectedIds.size === 1 ? 'item' : 'items'}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the selected media files. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBatchDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

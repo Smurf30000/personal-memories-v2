@@ -87,6 +87,7 @@ export const useMediaUpload = (userId: string) => {
     
     // Initialize upload progress
     setUploads(prev => new Map(prev).set(fileId, {
+      id: fileId,
       file,
       progress: 0,
       status: 'uploading',
@@ -95,6 +96,7 @@ export const useMediaUpload = (userId: string) => {
     try {
       // Update progress to 30% (starting conversion)
       setUploads(prev => new Map(prev).set(fileId, {
+        id: fileId,
         file,
         progress: 30,
         status: 'uploading',
@@ -105,6 +107,7 @@ export const useMediaUpload = (userId: string) => {
       
       // Update progress to 70% (conversion complete, saving to Firestore)
       setUploads(prev => new Map(prev).set(fileId, {
+        id: fileId,
         file,
         progress: 70,
         status: 'uploading',
@@ -121,6 +124,7 @@ export const useMediaUpload = (userId: string) => {
       });
 
       setUploads(prev => new Map(prev).set(fileId, {
+        id: fileId,
         file,
         progress: 100,
         status: 'completed',
@@ -133,6 +137,7 @@ export const useMediaUpload = (userId: string) => {
     } catch (error) {
       console.error('Upload error:', error);
       setUploads(prev => new Map(prev).set(fileId, {
+        id: fileId,
         file,
         progress: 0,
         status: 'error',
@@ -156,6 +161,24 @@ export const useMediaUpload = (userId: string) => {
   };
 
   /**
+   * Removes a specific upload from the list
+   */
+  const removeUpload = (fileId: string) => {
+    setUploads(prev => {
+      const newUploads = new Map(prev);
+      newUploads.delete(fileId);
+      return newUploads;
+    });
+  };
+
+  /**
+   * Clears all uploads from the list
+   */
+  const clearAll = () => {
+    setUploads(new Map());
+  };
+
+  /**
    * Clears completed uploads from the list
    */
   const clearCompleted = () => {
@@ -171,8 +194,10 @@ export const useMediaUpload = (userId: string) => {
   };
 
   return {
-    uploads: Array.from(uploads.values()),
+    uploads: Array.from(uploads.entries()).map(([id, progress]) => ({ id, ...progress })),
     uploadFiles,
+    removeUpload,
+    clearAll,
     clearCompleted,
   };
 };

@@ -5,7 +5,7 @@ import { useMediaUpload } from '@/feature/media/controller/useMediaUpload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Upload, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Upload, CheckCircle, XCircle, X } from 'lucide-react';
 
 /**
  * Upload media page component
@@ -13,7 +13,7 @@ import { ArrowLeft, Upload, CheckCircle, XCircle } from 'lucide-react';
 export default function UploadMedia() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
-  const { uploads, uploadFiles, clearCompleted } = useMediaUpload(user?.uid || '');
+  const { uploads, uploadFiles, removeUpload, clearAll, clearCompleted } = useMediaUpload(user?.uid || '');
   const [isDragging, setIsDragging] = useState(false);
 
   /**
@@ -118,24 +118,27 @@ export default function UploadMedia() {
 
         {uploads.length > 0 && (
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Upload Progress</CardTitle>
-                <CardDescription>{uploads.length} file(s) in queue</CardDescription>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Upload Progress</CardTitle>
+                  <CardDescription>
+                    {uploads.filter(u => u.status === 'completed').length} of {uploads.length} files uploaded
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearAll}
+                >
+                  Clear All
+                </Button>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={clearCompleted}
-                disabled={!uploads.some(u => u.status === 'completed')}
-              >
-                Clear Completed
-              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {uploads.map((upload, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center justify-between">
+              {uploads.map((upload) => (
+                <div key={upload.id} className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {upload.status === 'completed' && (
                         <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
@@ -145,11 +148,21 @@ export default function UploadMedia() {
                       )}
                       <span className="text-sm truncate">{upload.file.name}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground ml-2">
-                      {upload.status === 'uploading' && `${Math.round(upload.progress)}%`}
-                      {upload.status === 'completed' && 'Complete'}
-                      {upload.status === 'error' && 'Failed'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {upload.status === 'uploading' && `${Math.round(upload.progress)}%`}
+                        {upload.status === 'completed' && 'Complete'}
+                        {upload.status === 'error' && 'Failed'}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => removeUpload(upload.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   {upload.status === 'uploading' && (
                     <Progress value={upload.progress} className="h-2" />

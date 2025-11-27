@@ -118,23 +118,28 @@ function MemoryThumbnail({ memory, onClick }: MemoryThumbnailProps) {
   const isImage = memory.fileType.startsWith('image/');
   const isVideo = memory.fileType.startsWith('video/');
 
+  // Generate data URL from base64 or use downloadUrl as fallback
+  const mediaUrl = memory.base64Data 
+    ? `data:${memory.fileType};base64,${memory.base64Data}`
+    : memory.downloadUrl;
+
   return (
     <div 
       className="aspect-square overflow-hidden rounded-lg cursor-pointer hover:ring-2 hover:ring-primary transition-all group"
       onClick={onClick}
     >
       <div className="relative w-full h-full">
-        {isImage && !imageError ? (
+        {isImage && !imageError && mediaUrl ? (
           <img 
-            src={memory.downloadUrl}
+            src={mediaUrl}
             alt={memory.fileName}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
             onError={() => setImageError(true)}
           />
-        ) : isVideo ? (
+        ) : isVideo && mediaUrl ? (
           <video 
-            src={memory.downloadUrl}
+            src={mediaUrl}
             className="w-full h-full object-cover"
             preload="metadata"
           />
