@@ -78,7 +78,11 @@ export default function UploadMedia() {
           <CardHeader>
             <CardTitle>Select Files to Upload</CardTitle>
             <CardDescription>
-              Supported formats: JPG, PNG, HEIC, WebP, MP4, MOV (Max 100MB per file)
+              Supported formats: JPG, PNG, HEIC, WebP, MP4, MOV
+              <br />
+              <span className="text-destructive font-medium">
+                Size limits: 500KB per photo, 700KB per video
+              </span>
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -1,12 +1,31 @@
 import { useState } from 'react';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { storage, db } from '@/feature/authentication/model/firebaseConfig';
+import { db } from '@/feature/authentication/model/firebaseConfig';
 import { UploadProgress } from '../model/mediaTypes';
 import { toast } from '@/hooks/use-toast';
 
 /**
- * Validates if a file is an accepted media type
+ * Converts a file to base64 string
+ */
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      } else {
+        reject(new Error('Failed to read file'));
+      }
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+/**
+ * Validates if a file is an accepted media type and within size limits
  */
 const validateFile = (file: File): { valid: boolean; error?: string } => {
   const imageTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'];
@@ -20,11 +39,24 @@ const validateFile = (file: File): { valid: boolean; error?: string } => {
     };
   }
   
-  const maxSize = 100 * 1024 * 1024; // 100MB
-  if (file.size > maxSize) {
+  // Size limits for Firestore storage (base64 encoded files)
+  const isImage = imageTypes.includes(file.type);
+  const isVideo = videoTypes.includes(file.type);
+  
+  const maxImageSize = 500 * 1024; // 500KB for images
+  const maxVideoSize = 700 * 1024; // 700KB for videos
+  
+  if (isImage && file.size > maxImageSize) {
     return { 
       valid: false, 
-      error: 'File size exceeds 100MB limit.' 
+      error: 'Image size exceeds 500KB limit.' 
+    };
+  }
+  
+  if (isVideo && file.size > maxVideoSize) {
+    return { 
+      valid: false, 
+      error: 'Video size exceeds 700KB limit.' 
     };
   }
   
@@ -38,7 +70,7 @@ export const useMediaUpload = (userId: string) => {
   const [uploads, setUploads] = useState<Map<string, UploadProgress>>(new Map());
 
   /**
-   * Uploads a single file to Firebase Storage and saves metadata to Firestore
+   * Uploads a single file to Firestore as base64
    */
   const uploadFile = async (file: File) => {
     const validation = validateFile(file);
@@ -61,65 +93,43 @@ export const useMediaUpload = (userId: string) => {
     }));
 
     try {
-      // Create unique filename
-      const timestamp = Date.now();
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const uniqueFileName = `${timestamp}_${sanitizedName}`;
+      // Update progress to 30% (starting conversion)
+      setUploads(prev => new Map(prev).set(fileId, {
+        file,
+        progress: 30,
+        status: 'uploading',
+      }));
+
+      // Convert file to base64
+      const base64Data = await fileToBase64(file);
       
-      // Upload to Firebase Storage
-      const storageRef = ref(storage, `users/${userId}/media/${uniqueFileName}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      // Update progress to 70% (conversion complete, saving to Firestore)
+      setUploads(prev => new Map(prev).set(fileId, {
+        file,
+        progress: 70,
+        status: 'uploading',
+      }));
+      
+      // Save metadata and base64 data to Firestore
+      await addDoc(collection(db, 'media'), {
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        uploadedAt: serverTimestamp(),
+        base64Data,
+        userId,
+      });
 
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploads(prev => new Map(prev).set(fileId, {
-            file,
-            progress,
-            status: 'uploading',
-          }));
-        },
-        (error) => {
-          console.error('Upload error:', error);
-          setUploads(prev => new Map(prev).set(fileId, {
-            file,
-            progress: 0,
-            status: 'error',
-            error: error.message,
-          }));
-          toast({
-            title: "Upload Failed",
-            description: `Failed to upload ${file.name}`,
-            variant: "destructive",
-          });
-        },
-        async () => {
-          // Upload complete, get download URL
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          
-          // Save metadata to Firestore
-          await addDoc(collection(db, 'media'), {
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            uploadedAt: serverTimestamp(),
-            downloadUrl,
-            userId,
-          });
+      setUploads(prev => new Map(prev).set(fileId, {
+        file,
+        progress: 100,
+        status: 'completed',
+      }));
 
-          setUploads(prev => new Map(prev).set(fileId, {
-            file,
-            progress: 100,
-            status: 'completed',
-            downloadUrl,
-          }));
-
-          toast({
-            title: "Upload Successful",
-            description: `${file.name} uploaded successfully`,
-          });
-        }
-      );
+      toast({
+        title: "Upload Successful",
+        description: `${file.name} uploaded successfully`,
+      });
     } catch (error) {
       console.error('Upload error:', error);
       setUploads(prev => new Map(prev).set(fileId, {

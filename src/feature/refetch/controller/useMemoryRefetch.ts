@@ -148,6 +148,7 @@ export const useMemoryRefetch = (userId: string | undefined) => {
           fileSize: data.fileSize,
           uploadedAt: data.uploadedAt?.toDate() || new Date(),
           downloadUrl: data.downloadUrl,
+          base64Data: data.base64Data,
           userId: data.userId,
         });
       });
@@ -175,9 +176,25 @@ export const useMemoryRefetch = (userId: string | undefined) => {
       
       for (const media of mediaList) {
         try {
-          // Download the file
-          const response = await fetch(media.downloadUrl);
-          const blob = await response.blob();
+          let blob: Blob;
+          
+          // If base64 data exists, convert it to blob directly
+          if (media.base64Data) {
+            const byteCharacters = atob(media.base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            blob = new Blob([byteArray], { type: media.fileType });
+          } else if (media.downloadUrl) {
+            // Fallback to downloading from URL (old storage method)
+            const response = await fetch(media.downloadUrl);
+            blob = await response.blob();
+          } else {
+            console.error(`No data source for ${media.fileName}`);
+            continue;
+          }
           
           cachedMemories.push({
             id: media.id,
@@ -185,7 +202,7 @@ export const useMemoryRefetch = (userId: string | undefined) => {
             fileType: media.fileType,
             fileSize: media.fileSize,
             uploadedAt: media.uploadedAt.toISOString(),
-            downloadUrl: media.downloadUrl,
+            downloadUrl: media.downloadUrl || '',
             blobData: blob,
             cachedAt: Date.now(),
           });
@@ -210,15 +227,38 @@ export const useMemoryRefetch = (userId: string | undefined) => {
   const loadFromCache = async (): Promise<MediaMetadata[]> => {
     try {
       const cached = await getCachedMemories();
-      return cached.map(c => ({
-        id: c.id,
-        fileName: c.fileName,
-        fileType: c.fileType,
-        fileSize: c.fileSize,
-        uploadedAt: new Date(c.uploadedAt),
-        downloadUrl: c.downloadUrl,
-        userId: userId || '',
-      }));
+      
+      // Convert cached blobs back to base64 for display
+      const memoriesWithBase64 = await Promise.all(
+        cached.map(async (c) => {
+          let base64Data: string | undefined;
+          
+          if (c.blobData) {
+            // Convert blob to base64
+            const reader = new FileReader();
+            base64Data = await new Promise<string>((resolve) => {
+              reader.onloadend = () => {
+                const result = reader.result as string;
+                resolve(result.split(',')[1]); // Remove data URL prefix
+              };
+              reader.readAsDataURL(c.blobData!);
+            });
+          }
+          
+          return {
+            id: c.id,
+            fileName: c.fileName,
+            fileType: c.fileType,
+            fileSize: c.fileSize,
+            uploadedAt: new Date(c.uploadedAt),
+            downloadUrl: c.downloadUrl,
+            base64Data,
+            userId: userId || '',
+          };
+        })
+      );
+      
+      return memoriesWithBase64;
     } catch (error) {
       console.error('Error loading from cache:', error);
       return [];

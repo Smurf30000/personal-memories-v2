@@ -42,7 +42,11 @@ export function MediaPreviewModal({ media, open, onClose, onDelete, children }: 
    */
   const handleDownload = () => {
     const link = document.createElement('a');
-    link.href = media.downloadUrl;
+    // Use base64 data URL or downloadUrl
+    const downloadUrl = media.base64Data 
+      ? `data:${media.fileType};base64,${media.base64Data}`
+      : media.downloadUrl || '';
+    link.href = downloadUrl;
     link.download = media.fileName;
     link.target = '_blank';
     document.body.appendChild(link);
@@ -80,14 +84,14 @@ export function MediaPreviewModal({ media, open, onClose, onDelete, children }: 
           <div className="flex-1 overflow-auto flex items-center justify-center bg-muted/20 rounded-lg">
             {isImage && (
               <img 
-                src={media.downloadUrl} 
+                src={media.base64Data ? `data:${media.fileType};base64,${media.base64Data}` : media.downloadUrl} 
                 alt={media.fileName}
                 className="max-w-full max-h-[60vh] object-contain"
               />
             )}
             {isVideo && (
               <video 
-                src={media.downloadUrl} 
+                src={media.base64Data ? `data:${media.fileType};base64,${media.base64Data}` : media.downloadUrl} 
                 controls
                 className="max-w-full max-h-[60vh]"
               >

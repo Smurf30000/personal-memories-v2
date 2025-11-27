@@ -7,7 +7,8 @@ export interface MediaMetadata {
   fileType: string;
   fileSize: number;
   uploadedAt: Date;
-  downloadUrl: string;
+  downloadUrl?: string; // Optional: old storage method
+  base64Data?: string; // New: base64-encoded file data
   userId: string;
 }
 

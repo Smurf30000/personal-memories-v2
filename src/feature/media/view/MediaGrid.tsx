@@ -38,24 +38,29 @@ function MediaGridItem({ media, onClick }: MediaGridItemProps) {
   const isImage = media.fileType.startsWith('image/');
   const isVideo = media.fileType.startsWith('video/');
 
+  // Generate data URL from base64 or use downloadUrl
+  const mediaUrl = media.base64Data 
+    ? `data:${media.fileType};base64,${media.base64Data}`
+    : media.downloadUrl;
+
   return (
     <Card 
       className="aspect-square overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all group"
       onClick={onClick}
     >
       <div className="relative w-full h-full">
-        {isImage && !imageError ? (
+        {isImage && !imageError && mediaUrl ? (
           <img 
-            src={media.downloadUrl}
+            src={mediaUrl}
             alt={media.fileName}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
             onError={() => setImageError(true)}
           />
-        ) : isVideo ? (
+        ) : isVideo && mediaUrl ? (
           <>
             <video 
-              src={media.downloadUrl}
+              src={mediaUrl}
               className="w-full h-full object-cover"
               preload="metadata"
             />
