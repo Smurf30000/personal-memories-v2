@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_NAME = 'memories-cache-v1';
+const CACHE_NAME = 'memories-cache-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -13,17 +13,30 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network-first for HTML/JS, cache-first for assets
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
+  const url = new URL(event.request.url);
+  
+  // Network-first for HTML and JS files
+  if (url.pathname.endsWith('.html') || url.pathname.endsWith('.js') || url.pathname === '/') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
           return response;
-        }
-        return fetch(event.request);
-      })
-  );
+        })
+        .catch(() => caches.match(event.request))
+    );
+  } else {
+    // Cache-first for static assets
+    event.respondWith(
+      caches.match(event.request)
+        .then((response) => response || fetch(event.request))
+    );
+  }
 });
 
 // Activate event - clean up old caches
