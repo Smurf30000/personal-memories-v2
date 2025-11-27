@@ -72,14 +72,17 @@ const Dashboard = () => {
               </Button>
             </div>
 
-            <div className="bg-card p-6 rounded-lg border hover:border-primary transition-colors cursor-pointer">
+            <div 
+              className="bg-card p-6 rounded-lg border hover:border-primary transition-colors cursor-pointer"
+              onClick={() => navigate('/library')}
+            >
               <Image className="h-10 w-10 text-primary mb-4" />
               <h3 className="text-xl font-semibold mb-2">View Library</h3>
               <p className="text-sm text-muted-foreground">
                 Browse all your photos and videos
               </p>
-              <Button className="mt-4 w-full" disabled>
-                Coming Soon
+              <Button className="mt-4 w-full">
+                View Library
               </Button>
             </div>
 

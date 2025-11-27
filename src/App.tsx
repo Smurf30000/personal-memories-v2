@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import UploadMedia from "./pages/UploadMedia";
+import MediaLibrary from "./pages/MediaLibrary";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./feature/authentication/model/AuthContext";
 import { LoginScreen } from "./feature/authentication/view/LoginScreen";
@@ -31,6 +32,11 @@ const App = () => (
             <Route path="/upload" element={
               <ProtectedRoute>
                 <UploadMedia />
+              </ProtectedRoute>
+            } />
+            <Route path="/library" element={
+              <ProtectedRoute>
+                <MediaLibrary />
               </ProtectedRoute>
             } />
             <Route path="/login" element={<LoginScreen />} />
