@@ -23,7 +23,7 @@ const LandingPage = () => {
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-primary">Personal Memories</h1>
         <div className="space-x-4">
-          <Button variant="ghost" onClick={() => navigate("/login")}>
+          <Button className="bg-green-600 text-white hover:bg-green-700" onClick={() => navigate("/login")}>
             Sign In
           </Button>
           <Button onClick={() => navigate("/register")}>
@@ -45,7 +45,7 @@ const LandingPage = () => {
           <Button size="lg" onClick={() => navigate("/register")}>
             Start Free <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
-          <Button size="lg" variant="outline" onClick={() => navigate("/login")}>
+          <Button size="lg" className="bg-green-600 text-white hover:bg-green-700" onClick={() => navigate("/login")}>
             Sign In
           </Button>
         </div>
