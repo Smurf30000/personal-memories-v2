@@ -17,13 +17,17 @@ A web application for uploading, managing, and viewing personal media (photos an
 - ✅ Improve error handling in login/register flows
 - ✅ Add password reset functionality
 - ✅ Test Google OAuth flow end-to-end
+- ✅ Separate landing page from authenticated dashboard
 
-### Files to Modify
-- `src/feature/authentication/model/firebaseConfig.ts` - Add real Firebase credentials
-- `src/App.tsx` - Add protected route wrapper
-- Create `src/components/ProtectedRoute.tsx` - Route guard component
-- `src/feature/authentication/controller/useAuth.ts` - Add password reset function
-- `src/pages/Index.tsx` - Add logout button when authenticated
+### Files Created/Modified
+- ✅ `src/feature/authentication/model/firebaseConfig.ts` - Added real Firebase credentials
+- ✅ `src/App.tsx` - Updated routing with public landing and protected dashboard
+- ✅ `src/components/ProtectedRoute.tsx` - Route guard component
+- ✅ `src/feature/authentication/controller/useAuth.ts` - Added password reset function
+- ✅ `src/pages/LandingPage.tsx` - Public landing page for unauthenticated users
+- ✅ `src/pages/Dashboard.tsx` - Protected dashboard for authenticated users
+- ✅ `src/feature/authentication/view/LoginScreen.tsx` - Added password reset UI
+- ✅ `src/feature/authentication/view/RegisterScreen.tsx` - Added auto-redirect for logged-in users
 
 ### Deliverables
 - Fully functional authentication with session persistence
