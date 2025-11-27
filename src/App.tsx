@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
+import UploadMedia from "./pages/UploadMedia";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./feature/authentication/model/AuthContext";
 import { LoginScreen } from "./feature/authentication/view/LoginScreen";
@@ -25,6 +26,11 @@ const App = () => (
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/upload" element={
+              <ProtectedRoute>
+                <UploadMedia />
               </ProtectedRoute>
             } />
             <Route path="/login" element={<LoginScreen />} />

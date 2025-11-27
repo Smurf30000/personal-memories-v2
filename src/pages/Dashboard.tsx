@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/feature/authentication/model/AuthContext";
 import { logout } from "@/feature/authentication/controller/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { useMediaCounts } from "@/feature/media/controller/useMediaCounts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Protected dashboard for authenticated users
@@ -11,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  const { counts, loading } = useMediaCounts(user?.uid);
 
   const handleLogout = async () => {
     try {
@@ -55,14 +58,17 @@ const Dashboard = () => {
 
           {/* Quick Actions */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-card p-6 rounded-lg border hover:border-primary transition-colors cursor-pointer">
+            <div 
+              className="bg-card p-6 rounded-lg border hover:border-primary transition-colors cursor-pointer"
+              onClick={() => navigate('/upload')}
+            >
               <Upload className="h-10 w-10 text-primary mb-4" />
               <h3 className="text-xl font-semibold mb-2">Upload Media</h3>
               <p className="text-sm text-muted-foreground">
                 Add new photos and videos to your library
               </p>
-              <Button className="mt-4 w-full" disabled>
-                Coming Soon
+              <Button className="mt-4 w-full">
+                Upload Now
               </Button>
             </div>
 
@@ -92,20 +98,28 @@ const Dashboard = () => {
           {/* Stats/Info Section */}
           <div className="bg-card p-8 rounded-lg border">
             <h3 className="text-2xl font-semibold mb-4">Your Library</h3>
-            <div className="grid grid-cols-3 gap-6 text-center">
-              <div>
-                <p className="text-3xl font-bold text-primary">0</p>
-                <p className="text-sm text-muted-foreground">Photos</p>
+            {loading ? (
+              <div className="grid grid-cols-3 gap-6 text-center">
+                <Skeleton className="h-20" />
+                <Skeleton className="h-20" />
+                <Skeleton className="h-20" />
               </div>
-              <div>
-                <p className="text-3xl font-bold text-primary">0</p>
-                <p className="text-sm text-muted-foreground">Videos</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-6 text-center">
+                <div>
+                  <p className="text-3xl font-bold text-primary">{counts.photos}</p>
+                  <p className="text-sm text-muted-foreground">Photos</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-primary">{counts.videos}</p>
+                  <p className="text-sm text-muted-foreground">Videos</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-primary">{counts.albums}</p>
+                  <p className="text-sm text-muted-foreground">Albums</p>
+                </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold text-primary">0</p>
-                <p className="text-sm text-muted-foreground">Albums</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
