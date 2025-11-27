@@ -8,6 +8,16 @@
     <meta name="author" content="Personal Memories Platform" />
     <meta name="keywords" content="photo storage, video storage, memories, cloud storage, photo backup, media management" />
 
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#000000" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    
+    <!-- Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
     <meta property="og:title" content="Personal Memories Platform - Preserve Your Memories" />
     <meta property="og:description" content="Store your photos and videos in the cloud and automatically rediscover random memories. Perfect for when device storage is full." />
     <meta property="og:type" content="website" />
@@ -20,6 +30,18 @@
 
   <body>
     <div id="root"></div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Register Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered:', registration))
+            .catch(error => console.log('SW registration failed:', error));
+        });
+      }
+    </script>
   </body>
 </html>
