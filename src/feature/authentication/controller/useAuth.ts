@@ -68,8 +68,16 @@ export const logout = async () => {
 export const loginWithGoogle = async () => {
   try {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    provider.addScope('profile');
+    provider.addScope('email');
+    const result = await signInWithPopup(auth, provider);
+    console.log('Google sign-in successful:', result.user.email);
   } catch (error: any) {
+    console.error('Google sign-in error:', {
+      code: error.code,
+      message: error.message,
+      email: error.customData?.email
+    });
     throw new Error(getErrorMessage(error.code));
   }
 };
